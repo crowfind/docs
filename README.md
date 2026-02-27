@@ -2,13 +2,17 @@
 
 > 🌐 한국어 ➡️ [here](./README-kr.md)
 
-🐦 Welcome! This repository contains comprehensive documentation for CrowFind, covering its product features, technical architecture, and development workflows.
+🐦 Welcome! This repository contains the official documentation for CrowFind — an AI-driven investment insight platform where algorithms debate and insights emerge.
 
 ## 📂 Structure
-- `01-product-spec/`: Product definitions
-- `02-architecture/`: System design & diagrams
-- `03-api-contract/`: API specifications
-- `04-infra-devops/`: Deployment & Infrastructure
+
+- `01-product-spec/`: Product overview, vision, and service definition
+- `02-features/`: Feature breakdowns — AI Articles, AI Debate, and Lounge
+- `03-pricing/`: Subscription plans and access control
+- `04-technical/`: Tech stack, high-level architecture, and AI methodology
 
 ## 🚀 Quick Links
-- 📄 **[Crowfind Overview](./01-product-spec/overview.md)**
+
+- 📄 **[Product Overview](./01-product-spec/overview.md)**
+- ⚙️ **[Tech Stack](./04-technical/tech-stack.md)**
+- 🤖 **[AI Methodology](./04-technical/ai-methodology.md)**
