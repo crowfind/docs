@@ -11,6 +11,4 @@
 - `04-infra-devops/`: 인프라 구축 및 배포 전략 등
 
 ## 🚀 주요 문서 바로가기 (Quick Links)
-- 📄 **[제품 요구사항 정의서 (PRD)](./01-product-spec/PRD-kr.md)**
-- 📐 **[시스템 아키텍처 설계](./02-architecture/system-flow.md)**
-- 🗄️ **[데이터베이스 ERD](./02-architecture/database-erd.md)**
+- 📄 **[CrowFind 개요](./01-product-spec/overview.md)**

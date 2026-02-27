@@ -11,6 +11,4 @@
 - `04-infra-devops/`: Deployment & Infrastructure
 
 ## 🚀 Quick Links
-- 📄 **[Product Requirements (PRD)](./01-product-spec/PRD.md)**
-- 📐 **[System Architecture](./02-architecture/system-flow.md)**
-- 🗄️ **[Database ERD](./02-architecture/database-erd.md)**
+- 📄 **[Crowfind Overview](./01-product-spec/overview.md)**

@@ -1,6 +1,6 @@
-# CrowFind PRD (Product Requirements Document) - v.0.26.xx
+# CrowFind Overview - v.0.26.xx
 
-> 🌐 한국어 ➡️ [here](./PRD-kr.md)
+> 🌐 한국어 ➡️ [here](./overview-kr.md)
 
 ## 0. Project Background (Why CrowFind?)
 - **Brand Story**: The Crow is an exceptionally intelligent bird known for its ability to create and utilize tools. In an information-saturated stock market, CrowFind serves as an "AI-driven precision tool" to eliminate noise and capture genuine profit opportunities (Find).
