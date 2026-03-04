@@ -1,4 +1,4 @@
-# CrowFind Overview - v.0.26.xx
+# CrowFind Overview - v.1.26.xx
 
 > 🌐 한국어 ➡️ [here](./overview-kr.md)
 
