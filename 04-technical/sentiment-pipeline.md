@@ -1,0 +1,107 @@
+# Senti-Crow는 어떻게 아티클을 쓰는가
+
+## CrowFind의 AI는 한 명이 아니다
+
+CrowFind의 AI 분석은 단일 에이전트가 담당하지 않습니다. 3개의 Nasdaq 섹터(Tech, Healthcare, Consumer)와 4가지 분석 방법론의 조합으로 총 12개의 특화 에이전트가 운용됩니다.
+
+|                | Quant-Crow | Trend-Crow | Value-Crow | Senti-Crow |
+| -------------- | ---------- | ---------- | ---------- | ---------- |
+| **Tech**       | Tech-Quant | Tech-Trend | Tech-Value | Tech-Senti |
+| **Healthcare** | HC-Quant   | HC-Trend   | HC-Value   | HC-Senti   |
+| **Consumer**   | Con-Quant  | Con-Trend  | Con-Value  | Con-Senti  |
+
+각 에이전트는 같은 데이터 소스를 공유하지만, 데이터를 해석하는 프레임워크가 다릅니다.
+
+- **Quant-Crow**: 과거 패턴 매칭과 통계적 확률 계산
+- **Trend-Crow**: RSI, MACD, 거래량 등 기술적 지표 분석
+- **Value-Crow**: PER, PBR, EPS 등 펀더멘탈 가치 평가
+- **Senti-Crow**: 뉴스 감성과 시장 심리 분석
+
+같은 종목을 보더라도 Quant는 "통계적으로 이 패턴 이후 상승 확률이 67%"라고 말하고, Senti는 "시장이 이 뉴스에 과민 반응하고 있으며, 공포가 과도하게 선반영됐다"고 말합니다. 분석 대상이 같아도 관점이 다른 이유입니다.
+
+## Senti-Crow가 보는 것
+
+Senti-Crow는 "지금 이 순간의 시장 심리"를 분석하는 에이전트입니다. 숫자보다 뉴스를 더 비중 있게 다루고, 단순 요약이 아니라 뉴스가 시장 심리에 어떤 의미를 갖는지를 해석합니다.
+
+Senti는 제목만으로는 맥락을 파악하기 어렵기 때문에 실제 기사 내용을 읽어야 합니다. 이를 위해 수집 단계에서 저장해둔 뉴스 URL을 사용해 기사 본문을 크롤링합니다.
+
+## 아티클 생성 파이프라인
+
+```
+POST /articles/senti (sector, tickers)
+  → Common Context: DB에서 주가 + 뉴스(감성 점수 포함) 조회
+  → 섹터 내 최신 뉴스 선택 (티커당 최대 5건, 최대 4개 티커)
+  → 뉴스 URL로 기사 본문 크롤링 (finance.yahoo.com)
+  → 크롤링 성공한 뉴스만 LLM에 전달
+  → Senti-Crow 프롬프트 → LLM 호출
+  → 블록 조립 (TEXT → NEWS → TEXT → NEWS → ...)
+  → NestJS POST /internal/articles 발행
+```
+
+### Common Context: 데이터 수집은 분리되어 있다
+
+아티클 생성 시점에 데이터를 새로 수집하지 않습니다. [데이터 수집 파이프라인](./data-collection-pipeline.md)이 미리 쌓아둔 주가와 뉴스 데이터를 DB에서 읽어오는 구조입니다.
+
+이 조회 레이어를 **Common Context**라고 부릅니다. 모든 crow type이 공통으로 사용하는 데이터 조회 담당자입니다. AI 분석도, 크롤링도 하지 않습니다. 순수하게 DB에서 읽고 `ArticleContext(prices, news_items)`를 반환할 뿐입니다.
+
+### 뉴스 본문 크롤링: 원문은 버리고 요약은 남긴다
+
+DB에서 뉴스 목록을 가져왔으면, 각 뉴스 URL로 기사 본문을 크롤링합니다. 단, 크롤링 대상을 `finance.yahoo.com` 도메인으로 한정합니다.
+
+크롤링한 원문은 저장하지 않습니다. 원문을 그대로 저장하면 저작권 이슈가 생기기 때문입니다. 대신 크롤링한 본문을 바탕으로 LLM이 생성한 **내용 요약**만 GCS에 저장합니다. 이 요약은 title 기반의 감성 분석 summary와는 다릅니다. 감성 분석 summary는 제목만 보고 생성한 한 줄 요약이고, 여기서 말하는 요약은 실제 기사 본문을 읽고 생성한 내용 기반 요약입니다.
+
+GCS에 요약을 저장하는 이유는 과거 기사를 다시 활용하기 위해서입니다. 현재는 최신 뉴스만 분석 대상이지만, 이후 Quant나 다른 에이전트가 "과거에 비슷한 기사가 있었을 때 주가가 어떻게 움직였는가"를 분석하려면 과거 뉴스의 내용을 참조할 수 있어야 합니다. 원문은 사라지더라도 GCS에 남긴 요약이 그 역할을 합니다.
+
+크롤링에 실패한 뉴스는 LLM에 넘기지 않습니다. "본문을 읽지 못한 기사는 분석하지 않는다"는 원칙입니다.
+
+### LLM 프롬프팅
+
+크롤링에 성공한 뉴스 본문들을 모아 Senti-Crow 프롬프트로 LLM을 호출합니다. 프롬프트에는 섹터 정보와 함께 각 뉴스의 URL과 본문이 `{ "url": "본문" }` 형태로 담깁니다.
+
+LLM은 단순 요약이 아닌 시장 심리 해석을 요구받습니다. "시장이 과반응하고 있는가", "공포가 미리 반영됐는가", "조용히 낙관론이 쌓이고 있는가" 같은 질문에 답하는 방식입니다.
+
+LLM이 반환하는 구조는 아래와 같습니다.
+
+```json
+{
+  "title": "Tech Sector Sentiment — ...",
+  "tickers": ["AAPL", "NVDA"],
+  "segments": [
+    {
+      "text": "분석 단락",
+      "news_url": "https://...",
+      "news_comment": "이 기사가 중요한 이유"
+    },
+    {
+      "text": "결론 단락\n\nVerdict: Greed Dominant",
+      "news_url": null,
+      "news_comment": null
+    }
+  ]
+}
+```
+
+Verdict는 반드시 아래 셋 중 하나입니다.
+
+- **Greed Dominant**: 섹터 전반에 낙관론과 매수 심리가 우세한 상태 → 매수 관점
+- **Fear Dominant**: 부정적 뉴스나 불확실성으로 인해 공포 심리가 지배적인 상태 → 매도 또는 비중 축소 관점
+- **Mixed Neutral**: 긍정과 부정이 혼재하거나 뚜렷한 방향성이 없는 상태 → 관망 관점
+
+### 블록 조립과 ticker 검증
+
+LLM 응답을 받으면 서버 사이드에서 두 가지 작업을 합니다.
+
+첫째, **ticker 검증**입니다. LLM이 프롬프트 제약에도 불구하고 DB에 없는 ticker를 반환하는 경우가 있습니다. DB에 등록된 ticker 목록을 기준으로 한 번 더 필터링해서 미등록 ticker는 아티클에서 제거합니다.
+
+둘째, **블록 조립**입니다. segments 배열을 순회하며 TEXT 블록과 NEWS 블록을 교차 배치합니다.
+
+```
+order 0 | TEXT | 분석 단락 1
+order 1 | NEWS | URL + 한 줄 요약
+order 2 | TEXT | 분석 단락 2
+order 3 | NEWS | URL + 한 줄 요약
+...
+order N | TEXT | 결론 + "Verdict: Greed Dominant"
+```
+
+조립된 블록 배열이 NestJS로 발행되면 아티클이 생성됩니다. ai-server는 이 과정에서 DB에 직접 쓰지 않습니다. 쓰기는 전부 NestJS에 위임합니다.
