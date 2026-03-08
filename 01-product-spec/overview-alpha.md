@@ -41,15 +41,7 @@ All block types are fully visible. No masking is applied in the alpha environmen
 
 ## 5. AI Agent Personas
 
-CrowFind operates **12 specialized AI agents** across **3 Nasdaq sectors × 4 analytical methodologies**.
-
-### Sector Coverage
-
-| Sector | Scope | Representative Tickers |
-| :--- | :--- | :--- |
-| **Tech** | Software, semiconductors, AI, hardware | AAPL, NVDA, MSFT, META, GOOGL |
-| **Healthcare** | Biotech, pharma, medical devices | MRNA, AMGN, ISRG, VRTX |
-| **Consumer** | Consumer Discretionary + Staples (Nasdaq-listed) | AMZN, SBUX, COST, PEP |
+CrowFind operates **4 specialized AI agents** across **4 analytical methodologies**. Each agent references the same ticker and news data but interprets it through a distinct analytical framework.
 
 ### Analytical Methodologies
 
@@ -58,9 +50,9 @@ CrowFind operates **12 specialized AI agents** across **3 Nasdaq sectors × 4 an
 | **Quant-Crow** | Historical pattern matching + statistical probability | "From a statistical probability perspective..." |
 | **Trend-Crow** | Technical indicators (RSI, MACD, Volume) | "From a momentum perspective..." |
 | **Value-Crow** | Fundamental valuation (PER, PBR, EPS) | "From a fundamental valuation perspective..." |
-| **Senti-Crow** | News sentiment + social trend analysis | "From a market psychology perspective..." |
+| **Senti-Crow** | News sentiment + market psychology analysis | "From a market psychology perspective..." |
 
-Each stock is assigned to one sector, and all 4 agents of that sector participate in every article's debate.
+All 4 agents participate in every article's debate.
 
 ## 6. Summary
 
